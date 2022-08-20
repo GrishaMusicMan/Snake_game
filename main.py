@@ -23,8 +23,17 @@ class SnakeBlock:
         self.x = x
         self.y = y
 
-    def is_inside(self):
-        return 0 <= self.x < SIZE_BLOCK and 0 <= self.y < SIZE_BLOCK
+    def is_down(self):
+        return 0 <= self.x
+
+    def is_up(self):
+        return self.x < SIZE_BLOCK
+
+    def is_right(self):
+        return self.y < SIZE_BLOCK
+
+    def is_left(self):
+        return 0 <= self.y
 
 
 snake_blocks = [SnakeBlock(9, 8), SnakeBlock(9, 9), SnakeBlock(9, 10)]
@@ -74,17 +83,24 @@ while True:
 
             draw_block(color, row, column)
 
-    head = snake_blocks[-1]
-    if not head.is_inside():
-        print('Конец')
-        pygame.quit()
-        sys.exit()
-
     for block in snake_blocks:
         draw_block(SNAKE_COLOR, block.x, block.y)
 
-
+    head = snake_blocks[-1]
     new_head = SnakeBlock(head.x + d_row, head.y + d_col)
+
+    if not new_head.is_right():
+        new_head.y = 0
+
+    elif not new_head.is_left():
+        new_head.y = COUNT_BLOCKS - 1
+
+    elif not new_head.is_down():
+        new_head.x = COUNT_BLOCKS - 1
+
+    elif not new_head.is_up():
+        new_head.x = 0
+
     snake_blocks.append(new_head)
     snake_blocks.pop(0)
 
