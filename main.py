@@ -1,21 +1,26 @@
 import pygame
 import sys
+import random
+pygame.init()
 
 SIZE_BLOCK = 20
 COUNT_BLOCKS = 20
 FRAME_COLOR = (0, 255, 204)
 HEADER_COLOR = (0, 204, 153)
 WHITE = (255, 255, 255)
+RED = (255, 0, 0)
 BLUE = (204, 255, 255)
 SNAKE_COLOR = (0, 102, 0)
 MARGIN = 1
 HEADER_MARGIN = 70
+
 size = [SIZE_BLOCK * COUNT_BLOCKS + 2 * SIZE_BLOCK + MARGIN * COUNT_BLOCKS,
         SIZE_BLOCK * COUNT_BLOCKS + 2 * SIZE_BLOCK + MARGIN * COUNT_BLOCKS + HEADER_MARGIN]
 
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Змейка")
 timer = pygame.time.Clock()
+courier = pygame.font.SysFont('courier', 36)
 
 
 class SnakeBlock:
@@ -35,12 +40,26 @@ class SnakeBlock:
     def is_left(self):
         return 0 <= self.y
 
+    def __eq__(self, other):
+        return isinstance(other, SnakeBlock) and self.x == other.x and self.y == other.y
+
+def get_random_empty_block():
+    x = random.randint(0, COUNT_BLOCKS - 1)
+    y = random.randint(0, COUNT_BLOCKS - 1)
+    empty_block = SnakeBlock(x, y)
+    while empty_block in snake_blocks:
+        empty_block.x = random.randint(0, COUNT_BLOCKS - 1)
+        empty_block.y = random.randint(0, COUNT_BLOCKS - 1)
+    return empty_block
+
+
 
 snake_blocks = [SnakeBlock(9, 8), SnakeBlock(9, 9), SnakeBlock(9, 10)]
-
+apple = get_random_empty_block()
 d_row = 0
 d_col = 1
-
+total = 0
+speed = 1
 
 def draw_block(color, row, column):
     pygame.draw.rect(screen, color, [SIZE_BLOCK + column * SIZE_BLOCK + MARGIN * (column + 1),
@@ -71,8 +90,13 @@ while True:
                 d_row = 0
                 d_col = 1
 
-        screen.fill(FRAME_COLOR)
-        pygame.draw.rect(screen, HEADER_COLOR, [0, 0, size[0], HEADER_MARGIN])
+    screen.fill(FRAME_COLOR)
+    pygame.draw.rect(screen, HEADER_COLOR, [0, 0, size[0], HEADER_MARGIN])
+
+    text_total = courier.render(f'Total {total}', 0, WHITE)
+    text_speed = courier.render(f'Speed {speed}', 0, WHITE)
+    screen.blit(text_total, (SIZE_BLOCK, SIZE_BLOCK))
+    screen.blit(text_speed, (SIZE_BLOCK+200, SIZE_BLOCK))
 
     for row in range(COUNT_BLOCKS):
         for column in range(COUNT_BLOCKS):
@@ -82,12 +106,21 @@ while True:
                 color = BLUE
 
             draw_block(color, row, column)
+    draw_block(RED, apple.x, apple.y)
 
     for block in snake_blocks:
         draw_block(SNAKE_COLOR, block.x, block.y)
 
+
+
     head = snake_blocks[-1]
     new_head = SnakeBlock(head.x + d_row, head.y + d_col)
+
+    if head == apple:
+        total += 1
+        speed = total//5 + 1
+        snake_blocks.append(apple)
+        apple = get_random_empty_block()
 
     if not new_head.is_right():
         new_head.y = 0
@@ -105,4 +138,4 @@ while True:
     snake_blocks.pop(0)
 
     pygame.display.flip()
-    timer.tick(2)
+    timer.tick(3+speed)
